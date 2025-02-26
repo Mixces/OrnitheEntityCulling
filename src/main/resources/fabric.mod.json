@@ -2,10 +2,9 @@
 	"schemaVersion": 1,
 	"id": "entityculling",
 	"version": "${version}",
-	"name": "Example mod",
+	"name": "Entity Culling",
 	"description": "",
 	"authors": [
-		"tr7zw",
     "Mixces"
 	],
 	"contact": {
@@ -14,10 +13,10 @@
 	},
 	"license": "CC0-1.0",
 	"icon": "assets/entityculling/icon.png",
-	"environment": "*",
+	"environment": "client",
 	"entrypoints": {
 		"init": [
-      "dev.tr7zw.entityculling.EntityCullingMod"
+      "me.mixces.entityculling.EntityCulling"
 		]
 	},
 	"mixins": [
