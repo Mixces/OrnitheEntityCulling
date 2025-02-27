@@ -1,24 +1,24 @@
 package me.mixces.entityculling;
 
-import me.mixces.entityculling.handler.CullRunnable;
 import net.ornithemc.osl.entrypoints.api.ModInitializer;
-import net.ornithemc.osl.lifecycle.api.client.MinecraftClientEvents;
 
 public class EntityCulling implements ModInitializer {
 
-	public CullRunnable runnable;
-	private Thread thread;
+	/* debug */
+	public static int renderedBlockEntities = 0;
+	public static int culledBlockEntities = 0;
+	public static int renderedEntities = 0;
+	public static int culledEntities = 0;
 
 	@Override
 	public void init() {
-//		runnable = new CullRunnable();
-//		thread = new Thread(runnable,"Entity culling thread");
-//		thread.setUncaughtExceptionHandler((t, ex) -> ex.printStackTrace());
-//
-//		MinecraftClientEvents.TICK_END.register(minecraft -> {
-//			if (!thread.isAlive()) {
-//				thread.start();
-//			}
-//		});
+		System.out.println("Entity Culling Initialized");
+	}
+
+	public static void resetDebugFields() {
+		renderedBlockEntities = 0;
+		culledBlockEntities = 0;
+		renderedEntities = 0;
+		culledEntities = 0;
 	}
 }

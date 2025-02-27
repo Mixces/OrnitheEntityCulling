@@ -8,11 +8,12 @@
     "DebugOverlayMixin",
     "EntityRenderDispatcherMixin",
     "EntityRendererAccessor",
-    "MinecraftAccessor"
+    "GameRendererMixin",
+    "MinecraftMixin"
   ],
   "server": [
   ],
   "injectors": {
     "defaultRequire": 1
-  }
+	}
 }
