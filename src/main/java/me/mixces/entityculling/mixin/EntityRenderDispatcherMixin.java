@@ -13,7 +13,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(EntityRenderDispatcher.class)
 public abstract class EntityRenderDispatcherMixin {
-
 	@Shadow
 	public abstract <T extends Entity> EntityRenderer<T> getRenderer(Entity entity);
 

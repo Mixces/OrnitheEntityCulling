@@ -3,7 +3,6 @@ package me.mixces.entityculling;
 import net.ornithemc.osl.entrypoints.api.ModInitializer;
 
 public class EntityCulling implements ModInitializer {
-
 	/* debug */
 	public static int renderedBlockEntities = 0;
 	public static int culledBlockEntities = 0;

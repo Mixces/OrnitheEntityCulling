@@ -1,7 +1,6 @@
 package me.mixces.entityculling.mixin;
 
 import me.mixces.entityculling.EntityCulling;
-import me.mixces.entityculling.handler.EntityCullingHandler;
 import me.mixces.entityculling.handler.TileEntityCullingHandler;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
@@ -12,7 +11,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(BlockEntityRenderDispatcher.class)
 public abstract class BlockEntityRenderDispatcherMixin {
-
 	@Inject(
 		method = "render(Lnet/minecraft/block/entity/BlockEntity;DDDFI)V",
 		at = @At("HEAD"),

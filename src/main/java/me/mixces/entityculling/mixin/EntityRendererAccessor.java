@@ -7,7 +7,6 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(EntityRenderer.class)
 public interface EntityRendererAccessor {
-
 	@Invoker
 	void invokeRenderNameTag(Entity entity, double dx, double dy, double dz);
 }

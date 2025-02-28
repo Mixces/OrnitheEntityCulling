@@ -10,7 +10,6 @@ import java.util.List;
 
 @Mixin(DebugOverlay.class)
 public abstract class DebugOverlayMixin {
-
     @ModifyReturnValue(
 		method = "getGameInfo",
 		at = @At("RETURN")
