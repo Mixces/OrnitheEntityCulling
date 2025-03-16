@@ -15,7 +15,7 @@ public class BoundingBoxUtil {
 		GlStateManager.colorMask(false, false, false, false);
 		Tessellator tessellator = Tessellator.getInstance();
 		BufferBuilder worldRenderer = tessellator.getBuilder();
-		worldRenderer.begin(GL11.GL_QUADS, DefaultVertexFormat.POSITION);
+		worldRenderer.begin(GL11.GL_QUAD_STRIP, DefaultVertexFormat.POSITION);
 		worldRenderer.vertex(bb.maxX, bb.maxY, bb.maxZ).nextVertex();
 		worldRenderer.vertex(bb.maxX, bb.maxY, bb.minZ).nextVertex();
 		worldRenderer.vertex(bb.minX, bb.maxY, bb.maxZ).nextVertex();

@@ -3,17 +3,11 @@
 	"id": "entityculling",
 	"version": "${version}",
 	"name": "Entity Culling",
-	"description": "",
+	"description": "Entity culling/batching based on Patcher's code.",
 	"authors": [
     "Sk1er / Patcher devs",
     "Mixces"
 	],
-	"contact": {
-		"homepage": "",
-		"sources": ""
-	},
-	"license": "CC0-1.0",
-	"icon": "assets/entityculling/icon.png",
 	"environment": "client",
 	"entrypoints": {
 		"init": [

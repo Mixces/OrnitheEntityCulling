@@ -1,20 +1,23 @@
 {
-	"required": true,
-	"minVersion": "0.8",
-	"package": "me.mixces.entityculling.mixin",
-	"compatibilityLevel": "JAVA_8",
-	"client": [
-		"BlockEntityRenderDispatcherMixin",
-		"DebugOverlayMixin",
-		"EntityRenderDispatcherMixin",
-		"EntityRendererAccessor",
-		"GameRendererMixin",
-		"MinecraftMixin",
-		"TextureManagerMixin"
-	],
-	"server": [
-	],
-	"injectors": {
-		"defaultRequire": 1
+  "required": true,
+  "minVersion": "0.8",
+  "package": "me.mixces.entityculling.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "client": [
+    "BlockEntityRenderDispatcherMixin",
+    "BufferBuilderAccessor",
+    "DebugOverlayMixin",
+    "EntityRenderDispatcherMixin",
+    "EntityRendererAccessor",
+    "GameRendererMixin",
+    "LivingEntityRendererMixin",
+    "MinecraftMixin",
+    "ModelPartMixin",
+    "QuadMixin"
+  ],
+  "server": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
 	}
 }
