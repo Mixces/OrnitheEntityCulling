@@ -8,6 +8,7 @@
     "Sk1er / Patcher devs",
     "Mixces"
 	],
+    "license": "CC BY-NC-SA 4.0",
 	"environment": "client",
 	"entrypoints": {
 		"init": [
