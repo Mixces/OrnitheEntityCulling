@@ -1,5 +1,9 @@
 package me.mixces.entityculling.handler;
 
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tessellator;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
@@ -9,60 +13,77 @@ import net.minecraft.entity.living.mob.hostile.boss.EnderDragonEntity;
 import net.minecraft.entity.living.mob.hostile.boss.WitherEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL33;
 
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /* adapted from patcher */
 public class CullingHandler {
 	public static final CullingHandler INSTANCE = new CullingHandler();
 	private final Minecraft minecraft = Minecraft.getInstance();
 	private final EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
-	private final ConcurrentHashMap<Object, OcclusionQuery<?>> queries = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<Object, OcclusionQuery> queries = new ConcurrentHashMap<>();
+	private final ArrayDeque<Integer> queryPool = new ArrayDeque<>();
 	private int destroyTimer;
+	private final int delay = 25;
 	public boolean shouldPerformCulling = false;
+	private static final double DISTANCE_THRESHOLD_SQ = 4096.0;
+	private static final Box UNIT_BOX = new Box(0, 0, 0, 1, 1, 1);
+	private final Set<UUID> tempEntityIds = new HashSet<>();
+	private final Set<BlockPos> tempBlockPositions = new HashSet<>();
+	private final List<Object> keysToRemove = new ArrayList<>();
 
 	public boolean shouldCullEntity(Entity entity) {
 		if (!shouldPerformCulling || entity == minecraft.player || entity.world != minecraft.player.world) {
 			return false;
 		}
-		if (entity.getSquaredDistanceTo(minecraft.player) > 4096) {
+		if (entity.getSquaredDistanceTo(minecraft.player) > DISTANCE_THRESHOLD_SQ) {
 			return true;
 		}
-		if ((entity instanceof ArmorStandEntity && ((ArmorStandEntity) entity).isMarker()) ||
-			(entity.isInvisibleTo(minecraft.player) && !(entity instanceof ArmorStandEntity)) ||
-			(entity instanceof WitherEntity) || (entity instanceof EnderDragonEntity)) {
+		if (isSpecialEntity(entity)) {
 			return false;
 		}
-
 		return performOcclusionQuery(entity.getUuid(), () -> {
-			Box box = entity.getShape().expand(.2, .2, .2).move(-dispatcher.cameraX, -dispatcher.cameraY, -dispatcher.cameraZ);
-			BoundingBoxUtil.drawSelectionBoundingBox(box);
+			Box entityBox = entity.getShape();
+			Box expandedBox = entityBox.expand(0.2, 0.2, 0.2);
+			Box translatedBox = expandedBox.move(-dispatcher.cameraX, -dispatcher.cameraY, -dispatcher.cameraZ);
+			drawSelectionBoundingBox(translatedBox);
 		});
+	}
+
+	private boolean isSpecialEntity(Entity entity) {
+		if (entity instanceof ArmorStandEntity) {
+			return ((ArmorStandEntity) entity).isMarker();
+		}
+		return entity.isInvisibleTo(minecraft.player) ||
+			entity instanceof WitherEntity ||
+			entity instanceof EnderDragonEntity;
 	}
 
 	public boolean shouldCullTileEntity(BlockEntity tileEntity) {
 		if (!shouldPerformCulling || tileEntity.getWorld() != minecraft.player.world) {
 			return false;
 		}
-
 		return performOcclusionQuery(tileEntity.getPos(), () -> {
 			BlockPos pos = tileEntity.getPos();
-			Box box = new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1);
-			box = box.move(-dispatcher.cameraX, -dispatcher.cameraY, -dispatcher.cameraZ);
-			BoundingBoxUtil.drawSelectionBoundingBox(box);
+			Box box = UNIT_BOX.move(
+				pos.getX() - dispatcher.cameraX,
+				pos.getY() - dispatcher.cameraY,
+				pos.getZ() - dispatcher.cameraZ
+			);
+			drawSelectionBoundingBox(box);
 		});
 	}
 
 	private boolean performOcclusionQuery(Object key, Runnable drawBounds) {
-		OcclusionQuery<?> query = queries.computeIfAbsent(key, OcclusionQuery::new);
+		OcclusionQuery query = queries.computeIfAbsent(key, k -> new OcclusionQuery());
 		if (query.refresh) {
-			query.nextQuery = query.getQuery();
+			synchronized (queryPool) {
+				query.nextQuery = !queryPool.isEmpty() ? queryPool.poll() : GL15.glGenQueries();
+			}
 			query.refresh = false;
 			GL15.glBeginQuery(GL33.GL_ANY_SAMPLES_PASSED, query.nextQuery);
 			drawBounds.run();
@@ -72,17 +93,20 @@ public class CullingHandler {
 	}
 
 	public void updateQueries() {
-		long nanoTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
-		queries.values().forEach(query -> {
+		long nanoTime = System.nanoTime() / 1_000_000L;
+		for (OcclusionQuery query : queries.values()) {
 			if (query.nextQuery != 0 && GL15.glGetQueryObjecti(query.nextQuery, GL15.GL_QUERY_RESULT_AVAILABLE) != 0) {
 				query.occluded = GL15.glGetQueryObjecti(query.nextQuery, GL15.GL_QUERY_RESULT) == 0;
-				GL15.glDeleteQueries(query.nextQuery);
+				synchronized (queryPool) {
+					queryPool.offer(query.nextQuery);
+				}
 				query.nextQuery = 0;
-			} else if (query.nextQuery == 0 && nanoTime - query.executionTime > 25) {
+
+			} else if (query.nextQuery == 0 && nanoTime - query.executionTime > delay) {
 				query.executionTime = nanoTime;
 				query.refresh = true;
 			}
-		});
+		}
 	}
 
 	public void cleanupQueries() {
@@ -90,21 +114,70 @@ public class CullingHandler {
 			return;
 		}
 		destroyTimer = 0;
-
-		Set<UUID> entityIds = minecraft.world.getEntities().stream().map(Entity::getUuid).collect(Collectors.toSet());
-		Set<BlockPos> blockPositions = minecraft.world.blockEntities.stream().map(BlockEntity::getPos).collect(Collectors.toSet());
-
-		queries.entrySet().removeIf(entry -> {
+		tempEntityIds.clear();
+		tempBlockPositions.clear();
+		keysToRemove.clear();
+		for (Entity entity : minecraft.world.getEntities()) {
+			tempEntityIds.add(entity.getUuid());
+		}
+		for (BlockEntity blockEntity : minecraft.world.blockEntities) {
+			tempBlockPositions.add(blockEntity.getPos());
+		}
+		for (Map.Entry<Object, OcclusionQuery> entry : queries.entrySet()) {
 			Object key = entry.getKey();
-			OcclusionQuery<?> query = entry.getValue();
-
-			boolean shouldRemove = (key instanceof UUID && !entityIds.contains(key)) ||
-				(key instanceof BlockPos && !blockPositions.contains(key));
-
-			if (shouldRemove && query.nextQuery != 0) {
-				GL15.glDeleteQueries(query.nextQuery);
+			boolean shouldRemove = (key instanceof UUID && !tempEntityIds.contains(key)) ||
+				(key instanceof BlockPos && !tempBlockPositions.contains(key));
+			if (shouldRemove) {
+				keysToRemove.add(key);
+				OcclusionQuery query = entry.getValue();
+				if (query.nextQuery != 0) {
+					GL15.glDeleteQueries(query.nextQuery);
+				}
 			}
-			return shouldRemove;
-		});
+		}
+		for (Object key : keysToRemove) {
+			queries.remove(key);
+		}
+	}
+
+	public void drawSelectionBoundingBox(Box bb) {
+		GlStateManager.disableAlphaTest();
+		GlStateManager.disableCull();
+		GlStateManager.depthMask(false);
+		GlStateManager.colorMask(false, false, false, false);
+		Tessellator tessellator = Tessellator.getInstance();
+		BufferBuilder worldRenderer = tessellator.getBuilder();
+		worldRenderer.begin(GL11.GL_QUAD_STRIP, DefaultVertexFormat.POSITION);
+		double minX = bb.minX, minY = bb.minY, minZ = bb.minZ;
+		double maxX = bb.maxX, maxY = bb.maxY, maxZ = bb.maxZ;
+		worldRenderer.vertex(maxX, maxY, maxZ).nextVertex();
+		worldRenderer.vertex(maxX, maxY, minZ).nextVertex();
+		worldRenderer.vertex(minX, maxY, maxZ).nextVertex();
+		worldRenderer.vertex(minX, maxY, minZ).nextVertex();
+		worldRenderer.vertex(minX, minY, maxZ).nextVertex();
+		worldRenderer.vertex(minX, minY, minZ).nextVertex();
+		worldRenderer.vertex(minX, maxY, minZ).nextVertex();
+		worldRenderer.vertex(minX, minY, minZ).nextVertex();
+		worldRenderer.vertex(maxX, maxY, minZ).nextVertex();
+		worldRenderer.vertex(maxX, minY, minZ).nextVertex();
+		worldRenderer.vertex(maxX, maxY, maxZ).nextVertex();
+		worldRenderer.vertex(maxX, minY, maxZ).nextVertex();
+		worldRenderer.vertex(minX, maxY, maxZ).nextVertex();
+		worldRenderer.vertex(minX, minY, maxZ).nextVertex();
+		worldRenderer.vertex(minX, minY, maxZ).nextVertex();
+		worldRenderer.vertex(maxX, minY, maxZ).nextVertex();
+		worldRenderer.vertex(minX, minY, minZ).nextVertex();
+		worldRenderer.vertex(maxX, minY, minZ).nextVertex();
+		tessellator.end();
+		GlStateManager.depthMask(true);
+		GlStateManager.colorMask(true, true, true, true);
+		GlStateManager.enableAlphaTest();
+	}
+
+	public static class OcclusionQuery {
+		private int nextQuery;
+		private boolean refresh = true;
+		private boolean occluded;
+		private long executionTime = 0;
 	}
 }

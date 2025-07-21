@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(GameRenderer.class)
 public class GameRendererMixin {
+
 	@WrapOperation(
 		method = "render(IFJ)V",
 		at = @At(
@@ -21,9 +22,7 @@ public class GameRendererMixin {
 	)
 	private void entityCulling$shouldPerformCulling(WorldRenderer instance, Entity camera, Culler culler, float tickDelta, Operation<Void> original) {
 		CullingHandler.INSTANCE.shouldPerformCulling = true;
-//		TileEntityCullingHandler.INSTANCE.shouldPerformCulling = true;
 		original.call(instance, camera, culler, tickDelta);
 		CullingHandler.INSTANCE.shouldPerformCulling = false;
-//		TileEntityCullingHandler.INSTANCE.shouldPerformCulling = false;
 	}
 }

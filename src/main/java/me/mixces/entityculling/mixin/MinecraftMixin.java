@@ -30,7 +30,6 @@ public abstract class MinecraftMixin {
 	private void entityCulling$renderTickEvent(CallbackInfo ci) {
 		if (world != null) {
 			submit(CullingHandler.INSTANCE::updateQueries);
-//			submit(TileEntityCullingHandler.INSTANCE::updateQueries);
 		}
 	}
 
@@ -45,7 +44,6 @@ public abstract class MinecraftMixin {
 	private void entityCulling$clientTickEvent(CallbackInfo ci) {
 		if (world != null) {
 			CullingHandler.INSTANCE.cleanupQueries();
-//			TileEntityCullingHandler.INSTANCE.cleanupQueries();
 		}
 	}
 }
