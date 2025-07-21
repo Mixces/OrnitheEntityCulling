@@ -1,7 +1,7 @@
 package me.mixces.entityculling.mixin;
 
 import me.mixces.entityculling.EntityCulling;
-import me.mixces.entityculling.handler.TileEntityCullingHandler;
+import me.mixces.entityculling.handler.CullingHandler;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,7 +17,7 @@ public abstract class BlockEntityRenderDispatcherMixin {
 		cancellable = true
 	)
 	public void entityCulling$cullTileEntity(BlockEntity blockEntity, double x, double y, double z, float tickDelta, int blockMiningProgress, CallbackInfo ci) {
-		if (!TileEntityCullingHandler.INSTANCE.shouldCullTileEntity(blockEntity)) {
+		if (!CullingHandler.INSTANCE.shouldCullTileEntity(blockEntity)) {
 			EntityCulling.renderedBlockEntities++;
 			return;
 		}

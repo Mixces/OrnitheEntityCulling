@@ -11,7 +11,7 @@ public class EntityCulling implements ModInitializer {
 
 	@Override
 	public void init() {
-		System.out.println("Entity Culling Initialized");
+		/* :) */
 	}
 
 	public static void resetDebugFields() {

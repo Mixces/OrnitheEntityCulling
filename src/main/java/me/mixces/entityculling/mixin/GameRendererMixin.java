@@ -2,8 +2,7 @@ package me.mixces.entityculling.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import me.mixces.entityculling.handler.EntityCullingHandler;
-import me.mixces.entityculling.handler.TileEntityCullingHandler;
+import me.mixces.entityculling.handler.CullingHandler;
 import net.minecraft.client.render.Culler;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.world.WorldRenderer;
@@ -21,10 +20,10 @@ public class GameRendererMixin {
 		)
 	)
 	private void entityCulling$shouldPerformCulling(WorldRenderer instance, Entity camera, Culler culler, float tickDelta, Operation<Void> original) {
-		EntityCullingHandler.INSTANCE.setShouldPerformCulling(true);
-		TileEntityCullingHandler.INSTANCE.setShouldPerformCulling(true);
+		CullingHandler.INSTANCE.shouldPerformCulling = true;
+//		TileEntityCullingHandler.INSTANCE.shouldPerformCulling = true;
 		original.call(instance, camera, culler, tickDelta);
-		EntityCullingHandler.INSTANCE.setShouldPerformCulling(false);
-		TileEntityCullingHandler.INSTANCE.setShouldPerformCulling(false);
+		CullingHandler.INSTANCE.shouldPerformCulling = false;
+//		TileEntityCullingHandler.INSTANCE.shouldPerformCulling = false;
 	}
 }

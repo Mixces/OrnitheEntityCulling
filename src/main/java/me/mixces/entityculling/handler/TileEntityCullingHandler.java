@@ -18,17 +18,17 @@ public class TileEntityCullingHandler {
 	public static final TileEntityCullingHandler INSTANCE = new TileEntityCullingHandler();
 	private final Minecraft minecraft = Minecraft.getInstance();
 	private final EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
-    private final ConcurrentHashMap<BlockPos, OcclusionQuery> queries = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<BlockPos, OcclusionQuery<BlockPos>> queries = new ConcurrentHashMap<>();
     private int destroyTimer;
-    private boolean shouldPerformCulling = false;
+    public boolean shouldPerformCulling = false;
 
     public boolean shouldCullTileEntity(BlockEntity tileEntity) {
         if (!shouldPerformCulling || tileEntity.getWorld() != minecraft.player.world) {
             return false;
         }
-		OcclusionQuery query = queries.computeIfAbsent(tileEntity.getPos(), OcclusionQuery::new);
+		OcclusionQuery<BlockPos> query = queries.computeIfAbsent(tileEntity.getPos(), OcclusionQuery::new);
 		if (query.refresh) {
-			query.nextQuery = QueryUtil.getQuery();
+			query.nextQuery = query.getQuery();
 			query.refresh = false;
 			GL15.glBeginQuery(GL33.GL_ANY_SAMPLES_PASSED, query.nextQuery);
 			BlockPos pos = tileEntity.getPos();
@@ -61,8 +61,8 @@ public class TileEntityCullingHandler {
         destroyTimer = 0;
         Set<BlockPos> blockEntities = minecraft.world.blockEntities.stream().map(BlockEntity::getPos).collect(Collectors.toSet());
 		queries.entrySet().removeIf(entry -> {
-			OcclusionQuery query = entry.getValue();
-			if (!blockEntities.contains(query.pos)) {
+			OcclusionQuery<BlockPos> query = entry.getValue();
+			if (!blockEntities.contains(query.id)) {
 				if (query.nextQuery != 0) {
 					GL15.glDeleteQueries(query.nextQuery);
 				}
@@ -70,21 +70,5 @@ public class TileEntityCullingHandler {
 			}
 			return false;
 		});
-    }
-
-    public void setShouldPerformCulling(boolean shouldPerformCulling) {
-        this.shouldPerformCulling = shouldPerformCulling;
-    }
-
-    private static class OcclusionQuery {
-        private final BlockPos pos; // Owner
-        private int nextQuery;
-        private boolean refresh = true;
-        private boolean occluded;
-        private long executionTime = 0;
-
-        public OcclusionQuery(BlockPos pos) {
-            this.pos = pos;
-        }
     }
 }

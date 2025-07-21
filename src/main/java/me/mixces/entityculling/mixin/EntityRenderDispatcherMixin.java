@@ -1,7 +1,7 @@
 package me.mixces.entityculling.mixin;
 
 import me.mixces.entityculling.EntityCulling;
-import me.mixces.entityculling.handler.EntityCullingHandler;
+import me.mixces.entityculling.handler.CullingHandler;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.entity.Entity;
@@ -22,7 +22,7 @@ public abstract class EntityRenderDispatcherMixin {
 		cancellable = true
 	)
 	public void entityCulling$cullEntity(Entity entity, double dx, double dy, double dz, float yaw, float tickDelta, boolean skipHitbox, CallbackInfoReturnable<Boolean> cir) {
-		if (!EntityCullingHandler.INSTANCE.shouldCullEntity(entity)) {
+		if (!CullingHandler.INSTANCE.shouldCullEntity(entity)) {
 			EntityCulling.renderedEntities++;
 			return;
 		}

@@ -1,8 +1,7 @@
 package me.mixces.entityculling.mixin;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import me.mixces.entityculling.handler.EntityCullingHandler;
-import me.mixces.entityculling.handler.TileEntityCullingHandler;
+import me.mixces.entityculling.handler.CullingHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.world.ClientWorld;
 import org.spongepowered.asm.mixin.Mixin;
@@ -30,8 +29,8 @@ public abstract class MinecraftMixin {
 	)
 	private void entityCulling$renderTickEvent(CallbackInfo ci) {
 		if (world != null) {
-			submit(EntityCullingHandler.INSTANCE::updateQueries);
-			submit(TileEntityCullingHandler.INSTANCE::updateQueries);
+			submit(CullingHandler.INSTANCE::updateQueries);
+//			submit(TileEntityCullingHandler.INSTANCE::updateQueries);
 		}
 	}
 
@@ -45,8 +44,8 @@ public abstract class MinecraftMixin {
 	)
 	private void entityCulling$clientTickEvent(CallbackInfo ci) {
 		if (world != null) {
-			EntityCullingHandler.INSTANCE.cleanupQueries();
-			TileEntityCullingHandler.INSTANCE.cleanupQueries();
+			CullingHandler.INSTANCE.cleanupQueries();
+//			TileEntityCullingHandler.INSTANCE.cleanupQueries();
 		}
 	}
 }
