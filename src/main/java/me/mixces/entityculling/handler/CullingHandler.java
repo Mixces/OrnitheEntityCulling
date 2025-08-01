@@ -63,12 +63,12 @@ public class CullingHandler {
 			entity instanceof EnderDragonEntity;
 	}
 
-	public boolean shouldCullTileEntity(BlockEntity tileEntity) {
-		if (!shouldPerformCulling || tileEntity.getWorld() != minecraft.player.world) {
+	public boolean shouldCullBlockEntity(BlockEntity blockEntity) {
+		if (!shouldPerformCulling || blockEntity.getWorld() != minecraft.player.world) {
 			return false;
 		}
-		return performOcclusionQuery(tileEntity.getPos(), () -> {
-			BlockPos pos = tileEntity.getPos();
+		return performOcclusionQuery(blockEntity.getPos(), () -> {
+			BlockPos pos = blockEntity.getPos();
 			Box box = UNIT_BOX.move(
 				pos.getX() - dispatcher.cameraX,
 				pos.getY() - dispatcher.cameraY,

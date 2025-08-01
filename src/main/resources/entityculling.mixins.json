@@ -13,7 +13,8 @@
     "LivingEntityRendererMixin",
     "MinecraftMixin",
     "ModelPartMixin",
-    "QuadMixin"
+    "QuadMixin",
+    "RenderChunkMixin"
   ],
   "server": [
   ],

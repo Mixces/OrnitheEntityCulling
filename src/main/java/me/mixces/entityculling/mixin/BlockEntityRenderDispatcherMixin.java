@@ -16,8 +16,8 @@ public abstract class BlockEntityRenderDispatcherMixin {
 		at = @At("HEAD"),
 		cancellable = true
 	)
-	public void entityCulling$cullTileEntity(BlockEntity blockEntity, double x, double y, double z, float tickDelta, int blockMiningProgress, CallbackInfo ci) {
-		if (!CullingHandler.INSTANCE.shouldCullTileEntity(blockEntity)) {
+	public void entityCulling$cullBlockEntity(BlockEntity blockEntity, double x, double y, double z, float tickDelta, int blockMiningProgress, CallbackInfo ci) {
+		if (!CullingHandler.INSTANCE.shouldCullBlockEntity(blockEntity)) {
 			EntityCulling.renderedBlockEntities++;
 			return;
 		}
